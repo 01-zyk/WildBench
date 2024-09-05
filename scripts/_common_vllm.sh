@@ -25,6 +25,7 @@ if [ $n_shards -eq 1 ]; then
     python src/unified_infer.py \
         --data_name wild_bench \
         --model_name $model_name \
+        --tokenizer_name /xpfs/public/team/align/public/tokenizers/yi-132b-chat-0307-dev \
         --use_hf_conv_template --use_imend_stop \
         --download_dir $CACHE_DIR \
         --tensor_parallel_size $num_gpus \
@@ -48,6 +49,7 @@ elif [ $n_shards -gt 1 ]; then
             --start_index $start --end_index $end \
             --data_name wild_bench \
             --model_name $model_name \
+            --tokenizer_name /xpfs/public/team/align/public/tokenizers/yi-132b-chat-0307-dev \
             --use_hf_conv_template --use_imend_stop \
             --download_dir $CACHE_DIR \
             --tensor_parallel_size $num_gpus \

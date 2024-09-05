@@ -20,8 +20,8 @@ from tenacity import (
 )  # for exponential backoff
 import google.generativeai as genai
 import cohere
-from mistralai.client import MistralClient
-from mistralai.models.chat_completion import ChatMessage
+from mistralai import Mistral
+from mistralai import UserMessage
 from anthropic import Anthropic
 from reka.client import Reka
 
@@ -35,7 +35,7 @@ from together import Together
 
  
 
-def apply_template(chat_history, model_name, args):
+def apply_template(chat_history, model_name, tokenizer_name, args):
     model_inputs = [] 
     conv = None 
     for chats in tqdm(chat_history, desc="Applying template", disable=True):
@@ -44,7 +44,7 @@ def apply_template(chat_history, model_name, args):
             continue 
         else:
             if conv is None or isinstance(conv, HF_Conversation) == False:
-                conv = map_to_conv(model_name)
+                conv = map_to_conv(model_name, tokenizer_name)
             else:
                 conv.clear()
         for chat_id, chat in enumerate(chats):
@@ -54,11 +54,13 @@ def apply_template(chat_history, model_name, args):
     return model_inputs
 
 
-def load_eval_data(args, data_name=None, model_name=None):
+def load_eval_data(args, data_name=None, model_name=None, tokenizer_name=None):
     if data_name is None:
         data_name = args.data_name
     if model_name is None:
         model_name = args.model_name
+    if tokenizer_name is None:
+        tokenizer_name = args.tokenizer_name
     chat_history = []
     id_strs = []
     metadata = {}
@@ -117,7 +119,7 @@ def load_eval_data(args, data_name=None, model_name=None):
             assert key in item, f"Key {key} not found in metadata"
             metadata[key].append(item[key])
     print("Start applying template")
-    model_inputs = apply_template(chat_history, model_name, args)
+    model_inputs = apply_template(chat_history, model_name, tokenizer_name, args)
     return id_strs, chat_history, model_inputs, metadata
 
 
@@ -601,13 +603,13 @@ def mistral_chat_request(
         messages = [{"role":"system","content":"You are an AI assistant that helps people find information."},
                 {"role":"user","content": prompt}]
     api_key = os.getenv("MISTRAL_API_KEY")
-    client = MistralClient(api_key=api_key)
+    client = Mistral(api_key=api_key)
     response = client.chat(
         model=model,
         temperature=temperature,
         top_p=top_p,
         max_tokens=max_tokens,
-        messages=[ChatMessage(role=message['role'], content=message['content']) for message in messages],
+        messages=[{"role": message['role'], "content": message['content'], } for message in messages],
     )
 
     contents = []

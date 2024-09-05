@@ -9,10 +9,10 @@ from typing import List, Any, Dict, Union, Tuple
 from transformers import AutoTokenizer
 from global_configs import HF_TEMPLATED_MODELS
 
-def map_to_conv(model_name):
+def map_to_conv(model_name, tokenizer_name):
     if model_name in HF_TEMPLATED_MODELS:
         print(f"Model {model_name} is using HF chat-template method.")
-        conv = HF_Conversation(model_name)
+        conv = HF_Conversation(model_name, tokenizer_name)
     elif "gemma" in model_name.lower() and "-it" in model_name.lower():
         conv = get_conv_template("gemma")
     elif "tulu" in model_name.lower():
@@ -41,11 +41,11 @@ def map_to_conv(model_name):
     return conv 
 
 class HF_Conversation:
-    def __init__(self, model_name):
+    def __init__(self, model_name, tokenizer_name):
         self.roles = ["user", "assistant"]
         self.messages = []
         self.system_prompt = ""
-        self.hf_tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True) 
+        self.hf_tokenizer = AutoTokenizer.from_pretrained(tokenizer_name, trust_remote_code=True) 
 
     def set_system_message(self, system_message: str):
         self.system_prompt = system_message
