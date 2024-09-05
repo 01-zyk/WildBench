@@ -9,3 +9,4 @@ reka-api
 jsonlines
 together
 fire
+numpy==1.24.3
